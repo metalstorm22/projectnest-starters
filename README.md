@@ -1,10 +1,10 @@
 # projectnest-starters
 
-Blank starter files downloaded by [ProjectNest](https://github.com/metalstorm22/ProjectNest) when a template includes creative file types.
+Blank starter files served to [ProjectNest](https://github.com/metalstorm22/ProjectNest) via CloudKit public database. No account or sign-in required for users.
 
 ## How it works
 
-ProjectNest fetches `manifest.json` from the latest release, shows available packs in **Settings → Placeholder Files → Starter Packs**, and caches downloaded files at:
+ProjectNest queries the `iCloud.ParthGupta.ProjectNest` CloudKit container's public database, shows available packs in **Settings → Placeholder Files → Starter Packs**, and caches downloaded files at:
 
 ```
 ~/Library/Application Support/ProjectNest/StarterFiles/generated/
@@ -18,92 +18,71 @@ ProjectNest fetches `manifest.json` from the latest release, shows available pac
 | Adobe Creative Suite | `.ai`, `.aep`, `.indd` |
 | 3D | `.blend` |
 
-> **Note:** `.indd` is a 1-byte stub. To get a real blank InDesign document, open InDesign → New Document → Save As, then follow the update workflow below.
+> **Note:** `.indd` is a stub. To replace it, open InDesign → New Document → Save As, then update the `fileData` asset on the CloudKit record.
 
 ---
 
 ## Maintenance
 
-> **First time:** Clone this repo to a permanent location — don't work from `/tmp`.
-> ```bash
-> git clone https://github.com/metalstorm22/projectnest-starters.git ~/Desktop/Projects/projectnest-starters
-> ```
+The [CloudKit Console](https://developer.icloud.com) is your admin panel. Always make changes in the **Development** environment first, test in the app, then deploy.
 
-### Replacing an existing file
-
-For example, replacing `blank.aep` with a real one saved from After Effects:
-
-```bash
-cp ~/Downloads/blank.aep starters/blank.aep
-git add . && git commit -m "Better blank AEP" && git push
-gh release upload v1.0.0 starters/blank.aep --clobber
-```
-
-Also update `sizeBytes` in `manifest.json` if the file size changed, then:
-
-```bash
-gh release upload v1.0.0 manifest.json --clobber
-```
-
-### Adding a new file type to an existing pack
-
-1. Copy your file into `starters/`
-2. Open `manifest.json` and add an entry to the relevant pack:
-   ```json
-   {
-     "extension": "fig",
-     "displayName": "Figma File",
-     "downloadURL": "https://github.com/metalstorm22/projectnest-starters/releases/latest/download/blank.fig",
-     "sizeBytes": 1234
-   }
-   ```
-3. Commit, push, and upload:
-   ```bash
-   git add . && git commit -m "Add blank Figma file" && git push
-   gh release upload v1.0.0 starters/blank.fig manifest.json --clobber
-   ```
-
-### Adding a whole new pack
-
-Same as above — add your files to `starters/`, then add a new pack object to `manifest.json`:
-
-```json
-{
-  "id": "my-new-pack",
-  "name": "My New Pack",
-  "description": "Description shown in ProjectNest",
-  "files": [
-    {
-      "extension": "ext",
-      "displayName": "Display Name",
-      "downloadURL": "https://github.com/metalstorm22/projectnest-starters/releases/latest/download/blank.ext",
-      "sizeBytes": 1234
-    }
-  ]
-}
-```
-
-Then commit, push, and upload the new file + updated manifest:
-
-```bash
-git add . && git commit -m "Add new pack" && git push
-gh release upload v1.0.0 starters/blank.ext manifest.json --clobber
-```
-
-### Creating a new versioned release (optional)
-
-If you prefer clean version history instead of updating `v1.0.0` in place:
-
-```bash
-gh release create v1.1.0 manifest.json starters/blank.* \
-  --title "v1.1.0 — Added ..." \
-  --notes "What changed"
-```
-
-GitHub's `/releases/latest/` automatically points to the newest release, so the app picks it up with no changes needed.
+> **One rule for schema changes** (new record types or fields): go to **Deploy Schema to Production** after testing. Data records in the public database go live immediately — no deploy step needed for data.
 
 ---
 
-## Key rule
+### Adding a new file to an existing pack
 
-`manifest.json` in the release is what the app reads first. Any time you change which files are available — always re-upload it with `--clobber`.
+1. Dashboard → Data → Development → **StarterFile** → New Record
+2. Fill in the fields:
+   - `packID` — must match the pack's `packID` exactly (e.g. `adobe-creative`)
+   - `fileExtension` — e.g. `fig`
+   - `displayName` — e.g. `Figma File`
+   - `fileData` — upload the blank file
+   - `sortOrder` — position within the pack (1, 2, 3…)
+3. Save — the app picks it up immediately, no app update needed
+
+---
+
+### Adding a whole new pack
+
+1. Dashboard → Data → **StarterPack** → New Record:
+   - `packID` — unique ID, no spaces (e.g. `motion`)
+   - `name` — display name shown in the app (e.g. `Motion`)
+   - `packDescription` — one-line description
+   - `sortOrder` — position in the pack list
+2. Dashboard → Data → **StarterFile** → New Record for each file in the pack
+3. Done
+
+---
+
+### Removing a file or pack
+
+1. Dashboard → Data → find the record → delete it
+2. For a whole pack: delete the `StarterPack` record **and** all its `StarterFile` records — CloudKit does not cascade-delete automatically
+
+---
+
+## CloudKit schema
+
+**StarterPack**
+
+| Field | Type | Index |
+|-------|------|-------|
+| `packID` | String | Queryable |
+| `name` | String | — |
+| `packDescription` | String | — |
+| `sortOrder` | Int(64) | Sortable |
+| `recordName` | (metadata) | Queryable |
+
+**StarterFile**
+
+| Field | Type | Index |
+|-------|------|-------|
+| `packID` | String | Queryable |
+| `fileExtension` | String | — |
+| `displayName` | String | — |
+| `fileData` | Asset | — |
+| `sortOrder` | Int(64) | Sortable |
+| `recordName` | (metadata) | Queryable |
+
+> `sortOrder` is scoped per pack — two files in different packs can both have `sortOrder = 1` without conflict.
