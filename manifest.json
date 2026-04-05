@@ -1,0 +1,56 @@
+{
+  "version": "1",
+  "packs": [
+    {
+      "id": "sketch",
+      "name": "Sketch",
+      "description": "Blank Sketch document ready to open",
+      "files": [
+        {
+          "extension": "sketch",
+          "displayName": "Sketch Document",
+          "downloadURL": "https://github.com/metalstorm22/projectnest-starters/releases/latest/download/blank.sketch",
+          "sizeBytes": 1370
+        }
+      ]
+    },
+    {
+      "id": "adobe-creative",
+      "name": "Adobe Creative Suite",
+      "description": "Blank Illustrator, After Effects, and InDesign starter files",
+      "files": [
+        {
+          "extension": "ai",
+          "displayName": "Illustrator Document",
+          "downloadURL": "https://github.com/metalstorm22/projectnest-starters/releases/latest/download/blank.ai",
+          "sizeBytes": 388
+        },
+        {
+          "extension": "aep",
+          "displayName": "After Effects Project",
+          "downloadURL": "https://github.com/metalstorm22/projectnest-starters/releases/latest/download/blank.aep",
+          "sizeBytes": 65
+        },
+        {
+          "extension": "indd",
+          "displayName": "InDesign Document",
+          "downloadURL": "https://github.com/metalstorm22/projectnest-starters/releases/latest/download/blank.indd",
+          "sizeBytes": 0
+        }
+      ]
+    },
+    {
+      "id": "3d",
+      "name": "3D",
+      "description": "Blank Blender project file",
+      "files": [
+        {
+          "extension": "blend",
+          "displayName": "Blender File",
+          "downloadURL": "https://github.com/metalstorm22/projectnest-starters/releases/latest/download/blank.blend",
+          "sizeBytes": 12
+        }
+      ]
+    }
+  ]
+}
